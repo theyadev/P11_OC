@@ -39,12 +39,12 @@ def index():
 @app.route('/showSummary', methods=['POST'])
 def showSummary():
     club = [club for club in clubs if club['email']
-             == request.form['email']]
+            == request.form['email']]
 
     if len(club) == 0:
         flash('No club found with that email address')
         return redirect(url_for('index'))
-        
+
     competitionsWithIsPassed = [
         {**competition, 'isPassed': competitionIsPassed(competition)}
         for competition in competitions
