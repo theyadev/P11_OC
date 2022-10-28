@@ -1,4 +1,6 @@
 import json
+
+from datetime import datetime
 from flask import Flask, render_template, request, redirect, flash, url_for
 
 
@@ -12,6 +14,14 @@ def loadCompetitions():
     with open('competitions.json') as comps:
         listOfCompetitions = json.load(comps)['competitions']
         return listOfCompetitions
+
+
+def competitionIsPassed(competition):
+    competitionDate = datetime.strptime(
+        competition['date'], '%Y-%m-%d %H:%M:%S').date()
+    today = datetime.today().date()
+
+    return competitionDate < today
 
 
 app = Flask(__name__)
@@ -30,7 +40,13 @@ def index():
 def showSummary():
     club = [club for club in clubs if club['email']
             == request.form['email']][0]
-    return render_template('welcome.html', club=club, competitions=competitions)
+
+    competitionsWithIsPassed = [
+        {**competition, 'isPassed': competitionIsPassed(competition)}
+        for competition in competitions
+    ]
+
+    return render_template('welcome.html', club=club, competitions=competitionsWithIsPassed)
 
 
 @app.route('/book/<competition>/<club>')
@@ -52,6 +68,10 @@ def purchasePlaces():
 
     placesRequired = int(request.form['places'])
     numberOfPlaces = int(competition['numberOfPlaces'])
+
+    if competitionIsPassed(competition):
+        flash("Sorry, you cannot book for a competition in the past")
+        return render_template('booking.html', club=club, competition=competition)
 
     points = int(club['points'])
 
