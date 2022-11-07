@@ -23,6 +23,14 @@ def competitionIsPassed(competition):
 
     return competitionDate < today
 
+def withPassedCompetitions(competitions):
+    competitionsWithIsPassed = [
+        {**competition, 'isPassed': competitionIsPassed(competition)}
+        for competition in competitions
+    ]
+
+    return competitionsWithIsPassed
+    
 
 app = Flask(__name__)
 app.secret_key = 'something_special'
@@ -45,12 +53,9 @@ def showSummary():
         flash('No club found with that email address')
         return redirect(url_for('index'))
 
-    competitionsWithIsPassed = [
-        {**competition, 'isPassed': competitionIsPassed(competition)}
-        for competition in competitions
-    ]
 
-    return render_template('welcome.html', club=club[0], competitions=competitionsWithIsPassed)
+
+    return render_template('welcome.html', club=club[0], competitions=withPassedCompetitions(competitions))
 
 
 @app.route('/book/<competition>/<club>')
@@ -61,7 +66,7 @@ def book(competition, club):
         return render_template('booking.html', club=foundClub, competition=foundCompetition)
     else:
         flash("Something went wrong-please try again")
-        return render_template('welcome.html', club=club, competitions=competitions)
+        return render_template('welcome.html', club=club, competitions=withPassedCompetitions(competitions))
 
 
 @app.route('/purchasePlaces', methods=['POST'])
@@ -99,11 +104,15 @@ def purchasePlaces():
     club['points'] = points - placesRequired
 
     flash('Great-booking complete!')
-    return render_template('welcome.html', club=club, competitions=competitions)
+    return render_template('welcome.html', club=club, competitions=withPassedCompetitions(competitions))
 
 
-# TODO: Add route for points display
-
+@app.route("/clubs")
+def list_clubs():
+    return render_template(
+        "clubs.html",
+        clubs=clubs,
+    )
 
 @app.route('/logout')
 def logout():
