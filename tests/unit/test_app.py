@@ -1,6 +1,5 @@
 import pytest
 from server import app as flask_app
-from flask import session
 
 
 @pytest.fixture()
@@ -99,7 +98,6 @@ def test_purchase_negative_places(client):
 def test_purchase_more_than_we_have(client):
     response = client.post(
         "/purchasePlaces", data={"club": "Iron Temple", "competition": "Fall Classic", "places": 6})
-    print(response.data)
     assert b"Sorry, you do not have enough points to book this number of places" in response.data
 
 
